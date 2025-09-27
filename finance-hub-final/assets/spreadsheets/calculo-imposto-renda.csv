@@ -1,0 +1,17 @@
+Mês,Operação,Ativo,Tipo,Quantidade,Preço_Venda,Valor_Bruto,Preço_Médio,Custo_Total,Lucro_Prejuízo,IR_Devido,Observações
+Janeiro,Venda,PETR4.SA,Ação,50,40.00,2000.00,35.50,1775.00,225.00,33.75,15% sobre lucro
+Janeiro,Venda,VALE3.SA,Ação,25,68.00,1700.00,62.80,1570.00,130.00,19.50,15% sobre lucro
+Fevereiro,Venda,ITUB4.SA,Ação,100,33.50,3350.00,28.90,2890.00,460.00,69.00,15% sobre lucro
+Março,Venda,BTC,Crypto,0.02,320000.00,6400.00,280000.00,5600.00,800.00,120.00,15% sobre lucro
+Abril,Venda,HGLG11.SA,FII,40,100.00,4000.00,95.80,3832.00,168.00,0.00,FII isento para PF
+Maio,Venda,ETH,Crypto,1,16000.00,16000.00,12000.00,12000.00,4000.00,600.00,15% sobre lucro
+Junho,Venda,BOVA11.SA,ETF,15,110.00,1650.00,105.20,1578.00,72.00,10.80,15% sobre lucro
+Julho,Venda,XPML11.SA,FII,30,108.00,3240.00,102.50,3075.00,165.00,0.00,FII isento para PF
+Agosto,Venda,AAPL,Ação Internacional,10,190.00,1900.00,175.50,1755.00,145.00,21.75,15% sobre lucro
+Setembro,Venda,SPY,ETF Internacional,8,450.00,3600.00,420.80,3366.40,233.60,35.04,15% sobre lucro
+Total Anual,,,,,,,42840.00,37441.40,5398.60,909.84,Lucro total sujeito a IR
+Resumo IR,,,,,,,,,,,
+Lucro em Ações (até R$ 20.000/mês),,,,,,,,,5398.60,,Isento se vendas < R$ 20k/mês
+Lucro em FIIs,,,,,,,,,333.00,0.00,Sempre isento para PF
+Lucro em Crypto,,,,,,,,,4800.00,720.00,Sempre tributado 15%
+IR Total a Pagar,,,,,,,,,,,720.00,Apenas crypto tributado

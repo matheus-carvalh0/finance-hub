@@ -1,0 +1,14 @@
+Data,Categoria,Descrição,Valor,Tipo,Observações
+01/01/2025,Alimentação,Supermercado,250.00,Gasto,Compras mensais
+01/01/2025,Transporte,Combustível,120.00,Gasto,Gasolina
+01/01/2025,Moradia,Aluguel,1200.00,Gasto,Aluguel mensal
+01/01/2025,Salário,Salário,5000.00,Receita,Salário líquido
+02/01/2025,Lazer,Cinema,45.00,Gasto,Filme com família
+03/01/2025,Saúde,Farmácia,80.00,Gasto,Medicamentos
+05/01/2025,Educação,Curso online,199.00,Gasto,Curso de investimentos
+10/01/2025,Investimentos,Ações,500.00,Investimento,PETR4 + VALE3
+15/01/2025,Alimentação,Restaurante,85.00,Gasto,Jantar especial
+20/01/2025,Transporte,Uber,35.00,Gasto,Corridas do mês
+25/01/2025,Investimentos,Tesouro Direto,300.00,Investimento,IPCA+ 2029
+30/01/2025,Utilidades,Energia elétrica,180.00,Gasto,Conta de luz
+30/01/2025,Utilidades,Internet,89.90,Gasto,Internet fibra

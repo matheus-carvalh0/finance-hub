@@ -1,0 +1,424 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Configurações Globais */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Modo Escuro */
+.dark .dark-mode-hidden { 
+    display: none; 
+}
+
+.dark-mode-visible { 
+    display: none; 
+}
+
+.dark .dark-mode-visible { 
+    display: inline-block; 
+}
+
+/* Animações */
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+    animation: marquee 45s linear infinite;
+    will-change: transform;
+}
+
+/* Animação para mudanças de preço */
+@keyframes priceUp {
+    0% { background-color: rgba(34, 197, 94, 0.2); }
+    100% { background-color: transparent; }
+}
+
+@keyframes priceDown {
+    0% { background-color: rgba(239, 68, 68, 0.2); }
+    100% { background-color: transparent; }
+}
+
+.price-up {
+    animation: priceUp 1s ease-out;
+}
+
+.price-down {
+    animation: priceDown 1s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Barra Lateral */
+#sidebar {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Autocomplete */
+#asset-autocomplete-list {
+    position: absolute; 
+    z-index: 1000; 
+    width: 100%;
+    max-height: 200px; 
+    overflow-y: auto; 
+    border-radius: 0.5rem;
+}
+
+/* Botões de Período */
+.period-btn.active {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.dark .period-btn.active {
+    background-color: #58a6ff;
+    color: #0d1117;
+}
+
+/* Links de Navegação */
+.nav-link.active {
+    background-color: #f1f5f9;
+    color: #3b82f6;
+    font-weight: 600;
+}
+
+.dark .nav-link.active {
+     background-color: #020617;
+     color: #58a6ff;
+}
+
+/* Abas de Aprendizado */
+.learn-tab-btn.active {
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.dark .learn-tab-btn.active {
+    border-color: #58a6ff;
+    color: #58a6ff;
+}
+
+/* Cards */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.dark .card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Formulários */
+.form-input {
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    transform: scale(1.02);
+}
+
+/* Botões */
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Indicadores de Status */
+.status-positive {
+    color: #10b981;
+}
+
+.status-negative {
+    color: #ef4444;
+}
+
+.status-neutral {
+    color: #6b7280;
+}
+
+/* Alertas */
+.alert {
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background-color: #f0fdf4;
+    border-color: #10b981;
+    color: #065f46;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.alert-error {
+    background-color: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+}
+
+.alert-info {
+    background-color: #eff6ff;
+    border-color: #3b82f6;
+    color: #1e40af;
+}
+
+.dark .alert-success {
+    background-color: #064e3b;
+    color: #a7f3d0;
+}
+
+.dark .alert-warning {
+    background-color: #78350f;
+    color: #fcd34d;
+}
+
+.dark .alert-error {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+.dark .alert-info {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+}
+
+/* Gráficos */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 1rem 0;
+}
+
+/* Loading States */
+.loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .marquee-content {
+        animation-duration: 30s;
+    }
+    
+    .card {
+        margin: 0.5rem;
+    }
+    
+    .grid-responsive {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Tooltips */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #dcfce7;
+    color: #166534;
+}
+
+.badge-warning {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.badge-error {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.dark .badge-success {
+    background-color: #166534;
+    color: #dcfce7;
+}
+
+.dark .badge-warning {
+    background-color: #92400e;
+    color: #fef3c7;
+}
+
+.dark .badge-error {
+    background-color: #991b1b;
+    color: #fee2e2;
+}
+
+.dark .badge-info {
+    background-color: #1e40af;
+    color: #dbeafe;
+}
+
+/* Transições suaves */
+* {
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Estados de foco melhorados */
+input:focus, select:focus, textarea:focus, button:focus {
+    outline: none;
+    ring: 2px;
+    ring-color: #3b82f6;
+    ring-opacity: 0.5;
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Estados de hover melhorados */
+.hover-lift:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Gradientes personalizados */
+.gradient-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.gradient-secondary {
+    background: linear-gradient(135deg, #ec4899, #be185d);
+}
+
+.gradient-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.gradient-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.gradient-error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}

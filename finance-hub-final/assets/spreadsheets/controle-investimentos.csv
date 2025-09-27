@@ -1,0 +1,14 @@
+Data_Compra,Ativo,Tipo,Quantidade,Preço_Compra,Valor_Total,Preço_Atual,Valor_Atual,Rentabilidade_%,Rentabilidade_R$,Setor,Observações
+15/01/2024,PETR4.SA,Ação,100,35.50,3550.00,38.45,3845.00,8.31%,295.00,Petróleo e Gás,Dividendos trimestrais
+20/01/2024,VALE3.SA,Ação,50,62.80,3140.00,65.80,3290.00,4.78%,150.00,Mineração,Exposição a commodities
+25/01/2024,ITUB4.SA,Ação,150,28.90,4335.00,32.15,4822.50,11.25%,487.50,Financeiro,Maior banco privado
+10/02/2024,BOVA11.SA,ETF,30,105.20,3156.00,108.50,3255.00,3.14%,99.00,Índice Bovespa,Diversificação
+15/02/2024,HGLG11.SA,FII,80,95.80,7664.00,98.20,7856.00,2.51%,192.00,Logística,Dividend yield 10%
+01/03/2024,BTC,Crypto,0.05,280000.00,14000.00,350000.00,17500.00,25.00%,3500.00,Cryptocurrency,Reserva de valor
+05/03/2024,ETH,Crypto,2,12000.00,24000.00,15500.00,31000.00,29.17%,7000.00,Cryptocurrency,Contratos inteligentes
+20/03/2024,TESOURO IPCA+ 2029,Renda Fixa,10,3200.00,32000.00,3350.00,33500.00,4.69%,1500.00,Título Público,Proteção inflação
+25/03/2024,CDB BANCO INTER,Renda Fixa,1,15000.00,15000.00,15800.00,15800.00,5.33%,800.00,CDB,120% CDI
+10/04/2024,XPML11.SA,FII,60,102.50,6150.00,105.80,6348.00,3.22%,198.00,Shopping Centers,Localização premium
+15/04/2024,AAPL,Ação Internacional,20,175.50,3510.00,185.20,3704.00,5.53%,194.00,Technology,Via BDR ou ETF
+20/04/2024,SPY,ETF Internacional,15,420.80,6312.00,445.60,6684.00,5.89%,372.00,S&P 500,Mercado americano
+Total,,,,,128817.00,,143604.50,11.48%,14787.50,,Carteira diversificada
