@@ -85,7 +85,7 @@ finance-hub/
 ## 🚀 Como Usar
 
 ### 1. Acesso ao Sistema
-- Abra o arquivo `index.html` em um navegador moderno
+- Clique no link: https://matheus-carvalh0.github.io/finance-hub/
 - Faça login com email/senha ou use "Login com Google"
 - Para teste, use qualquer email/senha ou o login social
 
