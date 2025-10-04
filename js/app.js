@@ -393,43 +393,35 @@ class FinanceApp {
         }
 
         try {
-            // Buscar nos ativos locais (base expandida)
-            const localResults = this.ALL_ASSETS.filter(asset => 
-                asset.symbol.toLowerCase().includes(currentTerm) ||
-                asset.name.toLowerCase().includes(currentTerm) ||
-                asset.sector.toLowerCase().includes(currentTerm)
-            ).slice(0, 10); // Limitar a 10 resultados
+            // Usar a API Finnhub para busca de ativos
+            const results = await window.FinnhubAPI.searchSymbols(currentTerm);
 
-            // Buscar na API se não encontrar resultados locais suficientes
-            let apiResults = [];
-            if (localResults.length < 5) {
-                apiResults = await window.FinancialAPI.searchAssets(currentTerm);
-            }
+            if (results.length > 0) {
+                // Obter cotações para os resultados encontrados
+                const quotesPromises = results.slice(0, 8).map(async (asset) => {
+                    try {
+                        const quote = await window.FinnhubAPI.getQuote(asset.symbol);
+                        return {
+                            ...asset,
+                            price: quote.price,
+                            change: quote.change,
+                            changePercent: quote.changePercent
+                        };
+                    } catch (error) {
+                        console.error(`Erro ao obter cotação para ${asset.symbol}:`, error);
+                        return asset;
+                    }
+                });
 
-            const allResults = [...apiResults, ...localResults]
-                .filter((asset, index, self) => 
-                    index === self.findIndex(a => a.symbol === asset.symbol)
-                )
-                .slice(0, 8);
-
-            if (allResults.length > 0) {
-                this.renderAutocompleteResults(allResults);
+                const assetsWithQuotes = await Promise.all(quotesPromises);
+                this.renderAutocompleteResults(assetsWithQuotes);
                 autocompleteList.classList.remove('hidden');
             } else {
                 autocompleteList.classList.add('hidden');
             }
         } catch (error) {
             console.error('Erro na busca de ativos:', error);
-            // Fallback para busca local
-            const localResults = this.ALL_ASSETS.filter(asset => 
-                asset.symbol.toLowerCase().includes(currentTerm) ||
-                asset.name.toLowerCase().includes(currentTerm)
-            ).slice(0, 5);
-            
-            if (localResults.length > 0) {
-                this.renderAutocompleteResults(localResults);
-                autocompleteList.classList.remove('hidden');
-            }
+            autocompleteList.classList.add('hidden');
         }
     }
 
@@ -441,12 +433,16 @@ class FinanceApp {
                 <div class="flex items-center flex-1">
                     <div class="flex items-center mr-3">
                         ${asset.icon ? `<span class="text-lg mr-2">${asset.icon}</span>` : ''}
-                        ${this.getCountryFlag(asset.country)}
+                        ${window.FinnhubAPI.getCountryFlag(asset.country)}
                     </div>
                     <div class="flex flex-col flex-1">
                         <div class="flex items-center justify-between">
                             <span class="font-semibold text-sm text-gray-900 dark:text-white">${asset.symbol}</span>
-                            <span class="text-xs px-2 py-1 rounded-full ${this.getAssetTypeClass(asset.type)}">${this.getAssetTypeLabel(asset.type)}</span>
+                            <div class="flex items-center space-x-2">
+                                ${asset.price ? `<span class="text-sm font-medium">$${asset.price.toFixed(2)}</span>` : ''}
+                                ${asset.changePercent !== undefined ? `<span class="text-xs px-2 py-1 rounded-full ${asset.changePercent >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${asset.changePercent >= 0 ? '+' : ''}${asset.changePercent.toFixed(2)}%</span>` : ''}
+                                <span class="text-xs px-2 py-1 rounded-full ${this.getAssetTypeClass(asset.type)}">${this.getAssetTypeLabel(asset.type)}</span>
+                            </div>
                         </div>
                         <span class="text-xs text-gray-500 dark:text-gray-400 truncate">${asset.name}</span>
                         ${asset.sector ? `<span class="text-xs text-blue-600 dark:text-blue-400 mt-1">${asset.sector}</span>` : ''}
@@ -987,69 +983,217 @@ class FinanceApp {
         this.renderNewsData();
     }
 
-    renderTrendingStocks() {
+    async renderTrendingStocks() {
         const container = document.getElementById('trending-acoes-data');
-        if (!container || !this.marketData.trending) return;
+        if (!container) return;
 
-        container.innerHTML = this.marketData.trending.map(stock => `
-            <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-semibold">${stock.symbol}</h4>
-                    <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Ação</span>
+        try {
+            // Usar API Finnhub para obter ações em destaque baseadas na performance
+            const trendingAssets = await window.FinnhubAPI.getTrendingAssets(12);
+            
+            // Filtrar apenas ações (não crypto)
+            const trendingStocks = trendingAssets.filter(asset => 
+                asset.type === 'stock' && !asset.symbol.includes('USDT') && !asset.symbol.includes('BTC') && !asset.symbol.includes('ETH')
+            ).slice(0, 6);
+            
+            if (trendingStocks.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Carregando ações em destaque...</p>';
+                return;
+            }
+            
+            container.innerHTML = trendingStocks.map(stock => `
+                <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift" data-symbol="${stock.symbol}">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${stock.icon || '📈'}</span>
+                            <h4 class="font-semibold">${stock.symbol}</h4>
+                            <span class="text-xs">${stock.flag || '🌐'}</span>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                            ${Math.abs(stock.changePercent) > 5 ? '🔥 Volátil' : 'Ação'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">${stock.name}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-bold price-display">
+                            ${this.formatPrice(stock.price, stock.symbol)}
+                        </span>
+                        <span class="flex items-center change-display ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            <ion-icon name="${stock.changePercent >= 0 ? 'trending-up-outline' : 'trending-down-outline'}" class="mr-1"></ion-icon>
+                            ${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400">
+                        ${stock.changePercent > 3 ? '📈 Maior alta do dia' : 
+                          stock.changePercent < -3 ? '📉 Maior baixa do dia' : 
+                          stock.changePercent > 0 ? '⬆️ Em alta' : '⬇️ Em baixa'}
+                    </div>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${stock.name}</p>
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-bold">$${stock.currentPrice.toFixed(2)}</span>
-                    <span class="flex items-center ${stock.change24h >= 0 ? 'text-green-600' : 'text-red-600'}">
-                        <ion-icon name="${stock.change24h >= 0 ? 'trending-up-outline' : 'trending-down-outline'}" class="mr-1"></ion-icon>
-                        ${stock.change24h.toFixed(2)}%
-                    </span>
-                </div>
-            </div>
-        `).join('');
+            `).join('');
+
+            // Configurar streaming para atualizações em tempo real
+            trendingStocks.forEach(stock => {
+                window.FinnhubAPI.subscribe(stock.symbol, (update) => {
+                    this.updateStockCard(stock.symbol, update);
+                });
+            });
+
+        } catch (error) {
+            console.error('Erro ao renderizar ações em destaque:', error);
+            container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Erro ao carregar dados das ações</p>';
+        }
     }
 
-    renderCryptoData() {
+    updateStockCard(symbol, update) {
+        const stockCards = document.querySelectorAll(`[data-symbol="${symbol}"]`);
+        stockCards.forEach(card => {
+            const priceElement = card.querySelector('.price-display');
+            const changeElement = card.querySelector('.change-display');
+            
+            if (priceElement && update.price) {
+                // Animação de mudança de preço
+                priceElement.style.transition = 'all 0.5s ease';
+                priceElement.style.transform = 'scale(1.05)';
+                priceElement.style.backgroundColor = update.price > parseFloat(priceElement.textContent.replace(/[^\d.]/g, '')) ? '#10B981' : '#EF4444';
+                priceElement.style.color = 'white';
+                priceElement.textContent = this.formatPrice(update.price, symbol);
+                
+                setTimeout(() => {
+                    priceElement.style.transform = 'scale(1)';
+                    priceElement.style.backgroundColor = 'transparent';
+                    priceElement.style.color = '';
+                }, 1000);
+            }
+        });
+    }
+
+    async renderCryptoData() {
         const container = document.getElementById('crypto-data');
-        if (!container || !this.marketData.crypto) return;
+        if (!container) return;
 
-        container.innerHTML = this.marketData.crypto.map(crypto => `
-            <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="font-semibold">${crypto.symbol}</h4>
-                    <span class="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full">Crypto</span>
+        try {
+            // Usar API Finnhub para obter criptomoedas em destaque baseadas na performance
+            const trendingAssets = await window.FinnhubAPI.getTrendingAssets(12);
+            
+            // Filtrar apenas criptomoedas
+            const trendingCrypto = trendingAssets.filter(asset => 
+                asset.type === 'crypto' || asset.symbol.includes('USDT') || asset.symbol.includes('BTC') || asset.symbol.includes('ETH')
+            ).slice(0, 6);
+            
+            if (trendingCrypto.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Carregando criptomoedas em destaque...</p>';
+                return;
+            }
+            
+            container.innerHTML = trendingCrypto.map(crypto => `
+                <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift" data-symbol="${crypto.symbol}">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg">${crypto.icon || '🪙'}</span>
+                            <h4 class="font-semibold">${crypto.symbol.replace('BINANCE:', '').replace('USDT', '')}</h4>
+                            <span class="text-xs">${crypto.flag || '🌐'}</span>
+                        </div>
+                        <span class="text-xs px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full">
+                            ${Math.abs(crypto.changePercent) > 10 ? '🔥 Volátil' : 'Crypto'}
+                        </span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">${crypto.name}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-bold price-display">
+                            ${this.formatPrice(crypto.price, crypto.symbol)}
+                        </span>
+                        <span class="flex items-center change-display ${crypto.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            <ion-icon name="${crypto.changePercent >= 0 ? 'trending-up-outline' : 'trending-down-outline'}" class="mr-1"></ion-icon>
+                            ${crypto.changePercent >= 0 ? '+' : ''}${crypto.changePercent.toFixed(2)}%
+                        </span>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400">
+                        ${crypto.changePercent > 5 ? '🚀 Maior alta do dia' : 
+                          crypto.changePercent < -5 ? '💥 Maior baixa do dia' : 
+                          crypto.changePercent > 0 ? '⬆️ Em alta' : '⬇️ Em baixa'}
+                    </div>
                 </div>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">${crypto.name}</p>
-                <div class="flex items-center justify-between">
-                    <span class="text-lg font-bold">$${crypto.currentPrice.toLocaleString()}</span>
-                    <span class="flex items-center ${crypto.change24h >= 0 ? 'text-green-600' : 'text-red-600'}">
-                        <ion-icon name="${crypto.change24h >= 0 ? 'trending-up-outline' : 'trending-down-outline'}" class="mr-1"></ion-icon>
-                        ${crypto.change24h.toFixed(2)}%
-                    </span>
-                </div>
-            </div>
-        `).join('');
+            `).join('');
+
+            // Configurar streaming para atualizações em tempo real
+            trendingCrypto.forEach(crypto => {
+                window.FinnhubAPI.subscribe(crypto.symbol, (update) => {
+                    this.updateStockCard(crypto.symbol, update);
+                });
+            });
+
+        } catch (error) {
+            console.error('Erro ao renderizar criptomoedas em destaque:', error);
+            container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Erro ao carregar dados das criptomoedas</p>';
+        }
     }
 
-    renderNewsData() {
+    async renderNewsData() {
         const container = document.getElementById('news-data');
-        if (!container || !this.marketData.news) return;
+        if (!container) return;
 
-        container.innerHTML = this.marketData.news.map(article => `
-            <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift">
-                <div class="flex items-start space-x-3">
-                    ${article.image ? `<img src="${article.image}" alt="" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">` : ''}
-                    <div class="flex-1 min-w-0">
-                        <h4 class="font-semibold text-sm mb-2 line-clamp-2">${article.title}</h4>
-                        <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-3">${article.summary}</p>
-                        <div class="flex items-center justify-between text-xs text-gray-500">
-                            <span>${article.source}</span>
-                            <span>${new Date(article.publishedAt).toLocaleDateString('pt-BR')}</span>
+        try {
+            // Usar API Finnhub para obter notícias em tempo real
+            const marketNews = await window.FinnhubAPI.getMarketNews('general');
+            
+            if (marketNews.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Carregando últimas notícias...</p>';
+                return;
+            }
+            
+            container.innerHTML = marketNews.slice(0, 8).map(news => `
+                <div class="card bg-card-light dark:bg-card-dark rounded-lg p-4 hover-lift cursor-pointer" onclick="window.open('${news.url}', '_blank')">
+                    <div class="flex items-start space-x-3">
+                        <img src="${news.image || 'https://via.placeholder.com/60x60/4F46E5/FFFFFF?text=📰'}" alt="News" class="w-12 h-12 rounded-lg object-cover flex-shrink-0" onerror="this.src='https://via.placeholder.com/60x60/4F46E5/FFFFFF?text=📰'">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-sm mb-1 line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">${news.title}</h4>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">${news.summary || 'Clique para ler a notícia completa...'}</p>
+                            <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                                <span class="flex items-center">
+                                    <span class="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                                    ${news.source}
+                                </span>
+                                <span>${this.formatNewsDate(news.publishedAt)}</span>
+                            </div>
+                            <div class="mt-1">
+                                <span class="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
+                                    ${news.category || 'Mercado'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `).join('');
+
+            // Atualizar notícias a cada 5 minutos
+            setTimeout(() => {
+                this.renderNewsData();
+            }, 300000); // 5 minutos
+
+        } catch (error) {
+            console.error('Erro ao renderizar notícias:', error);
+            container.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">Erro ao carregar notícias</p>';
+        }
+    }
+
+    formatNewsDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
+        
+        if (diffInHours < 1) {
+            const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+            return `${diffInMinutes}min atrás`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours}h atrás`;
+        } else {
+            return date.toLocaleDateString('pt-BR', { 
+                day: '2-digit', 
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
     }
 
     updateMarquee() {
@@ -3518,38 +3662,117 @@ class FinanceApp {
         }
     }
 
-    // Método para inicializar ticker com dados atualizados
-    initializeTicker() {
+    // Método para inicializar ticker com dados da API Finnhub
+    async initializeTicker() {
         const tickerContainer = document.getElementById('market-ticker');
-        if (!tickerContainer) return;
+        if (!tickerContainer) {
+            console.warn('Container do ticker não encontrado');
+            return;
+        }
 
-        const tickerData = [
-            { symbol: 'BTC', name: 'Bitcoin', flag: '🌐', price: 67500, change: 2.5 },
-            { symbol: 'ETH', name: 'Ethereum', flag: '🌐', price: 3850, change: 1.8 },
-            { symbol: 'AAPL', name: 'Apple', flag: '🇺🇸', price: 175.50, change: -0.5 },
-            { symbol: 'GOOGL', name: 'Google', flag: '🇺🇸', price: 142.30, change: 1.2 },
-            { symbol: 'MSFT', name: 'Microsoft', flag: '🇺🇸', price: 378.85, change: 0.8 },
-            { symbol: 'TSLA', name: 'Tesla', flag: '🇺🇸', price: 248.50, change: -1.2 },
-            { symbol: 'PETR4.SA', name: 'Petrobras', flag: '🇧🇷', price: 38.45, change: 0.9 },
-            { symbol: 'VALE3.SA', name: 'Vale', flag: '🇧🇷', price: 65.80, change: -0.3 },
-            { symbol: 'ITUB4.SA', name: 'Itaú', flag: '🇧🇷', price: 32.15, change: 0.6 },
-            { symbol: 'BOVA11.SA', name: 'BOVA11', flag: '🇧🇷', price: 108.50, change: 0.4 }
-        ];
+        try {
+            // Obter ativos em destaque da API Finnhub
+            const trendingAssets = await window.FinnhubAPI.getTrendingAssets(12);
+            
+            if (trendingAssets.length === 0) {
+                console.warn('Nenhum ativo em destaque encontrado, usando dados padrão');
+                this.initializeTickerFallback();
+                return;
+            }
 
-        tickerContainer.innerHTML = `
-            <div class="ticker-content">
-                ${tickerData.map(item => `
-                    <div class="ticker-item" data-symbol="${item.symbol}">
-                        <span class="ticker-flag">${item.flag}</span>
-                        <span class="ticker-symbol">${item.symbol}</span>
-                        <span class="ticker-price">${this.formatPrice(item.price, item.symbol)}</span>
-                        <span class="ticker-change text-xs ${item.change >= 0 ? 'text-green-500' : 'text-red-500'}">
-                            ${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%
+            const renderTicker = (data) => {
+                const tickerHTML = data.map(asset => `
+                    <div class="ticker-item" data-symbol="${asset.symbol}">
+                        <span class="ticker-flag">${asset.flag || '🌐'}</span>
+                        <span class="ticker-symbol">${asset.symbol}</span>
+                        <span class="ticker-price price-display">${this.formatPrice(asset.price, asset.symbol)}</span>
+                        <span class="ticker-change change-display text-xs ${asset.changePercent >= 0 ? 'text-green-500' : 'text-red-500'}">
+                            ${asset.changePercent >= 0 ? '+' : ''}${asset.changePercent.toFixed(2)}%
                         </span>
                     </div>
-                `).join('')}
+                `).join('');
+                
+                tickerContainer.innerHTML = `<div class="ticker-content">${tickerHTML}</div>`;
+            };
+
+            renderTicker(trendingAssets);
+
+            // Configurar streaming em tempo real para os ativos do ticker
+            trendingAssets.forEach(asset => {
+                window.FinnhubAPI.subscribe(asset.symbol, (update) => {
+                    this.updateTickerAsset(asset.symbol, update);
+                });
+            });
+
+            // Atualizar dados do ticker a cada 30 segundos
+            setInterval(async () => {
+                try {
+                    const updatedAssets = await window.FinnhubAPI.getTrendingAssets(12);
+                    if (updatedAssets.length > 0) {
+                        renderTicker(updatedAssets);
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar ticker:', error);
+                }
+            }, 30000);
+
+        } catch (error) {
+            console.error('Erro ao inicializar ticker:', error);
+            this.initializeTickerFallback();
+        }
+    }
+
+    updateTickerAsset(symbol, update) {
+        const tickerItems = document.querySelectorAll(`[data-symbol="${symbol}"]`);
+        tickerItems.forEach(item => {
+            const priceDisplay = item.querySelector('.price-display');
+            const changeDisplay = item.querySelector('.change-display');
+            
+            if (priceDisplay && update.price) {
+                // Animação de mudança de preço
+                priceDisplay.style.transition = 'all 0.3s ease';
+                priceDisplay.style.backgroundColor = update.price > parseFloat(priceDisplay.textContent.replace(/[^\d.]/g, '')) ? '#10B981' : '#EF4444';
+                priceDisplay.style.color = 'white';
+                priceDisplay.textContent = this.formatPrice(update.price, symbol);
+                
+                setTimeout(() => {
+                    priceDisplay.style.backgroundColor = 'transparent';
+                    priceDisplay.style.color = '';
+                }, 1000);
+            }
+        });
+    }
+
+    initializeTickerFallback() {
+        const tickerContainer = document.getElementById('market-ticker');
+        if (!tickerContainer) return;
+        
+        // Dados de fallback
+        const fallbackData = [
+            { symbol: 'BTC', name: 'Bitcoin', flag: '🌐', price: 67500, changePercent: 2.5 },
+            { symbol: 'ETH', name: 'Ethereum', flag: '🌐', price: 3850, changePercent: 1.8 },
+            { symbol: 'AAPL', name: 'Apple', flag: '🇺🇸', price: 175.50, changePercent: -0.5 },
+            { symbol: 'GOOGL', name: 'Google', flag: '🇺🇸', price: 142.30, changePercent: 1.2 },
+            { symbol: 'MSFT', name: 'Microsoft', flag: '🇺🇸', price: 378.85, changePercent: 0.8 },
+            { symbol: 'TSLA', name: 'Tesla', flag: '🇺🇸', price: 248.50, changePercent: -1.2 },
+            { symbol: 'PETR4.SA', name: 'Petrobras', flag: '🇧🇷', price: 38.45, changePercent: 0.9 },
+            { symbol: 'VALE3.SA', name: 'Vale', flag: '🇧🇷', price: 65.80, changePercent: -0.3 },
+            { symbol: 'ITUB4.SA', name: 'Itaú', flag: '🇧🇷', price: 32.15, changePercent: 0.6 },
+            { symbol: 'BOVA11.SA', name: 'BOVA11', flag: '🇧🇷', price: 108.50, changePercent: 0.4 }
+        ];
+
+        const tickerHTML = fallbackData.map(item => `
+            <div class="ticker-item" data-symbol="${item.symbol}">
+                <span class="ticker-flag">${item.flag}</span>
+                <span class="ticker-symbol">${item.symbol}</span>
+                <span class="ticker-price">${this.formatPrice(item.price, item.symbol)}</span>
+                <span class="ticker-change text-xs ${item.changePercent >= 0 ? 'text-green-500' : 'text-red-500'}">
+                    ${item.changePercent >= 0 ? '+' : ''}${item.changePercent.toFixed(2)}%
+                </span>
             </div>
-        `;
+        `).join('');
+        
+        tickerContainer.innerHTML = `<div class="ticker-content">${tickerHTML}</div>`;
     }
 }
 
@@ -3560,3 +3783,12 @@ window.FinanceApp = new FinanceApp();
 document.addEventListener('DOMContentLoaded', () => {
     // A inicialização será chamada pelo AuthManager quando o usuário fizer login
 });
+
+
+// Inicializar o FinanceApp quando o DOM estiver completamente carregado e o usuário logado
+document.addEventListener("auth:loggedIn", () => {
+    if (window.FinanceApp && !window.FinanceApp.initialized) {
+        window.FinanceApp.initialize();
+    }
+});
+

@@ -172,15 +172,10 @@
         <div id="main-content" class="flex-1 w-full">
             <header class="bg-gray-50 dark:bg-card-dark shadow-sm sticky top-0 z-30">
                 <div class="relative flex flex-col justify-between p-4 h-24">
-                     <!-- Marquee de Ativos (camada superior) -->
-                    <div class="absolute top-0 left-0 right-0 h-10 flex items-center overflow-hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700">
-                        <div id="ticker-container" class="flex items-center animate-marquee">
-                            <div id="ticker-content" class="flex items-center space-x-8 px-4 whitespace-nowrap text-sm font-medium">
-                                <!-- Conteúdo será preenchido dinamicamente -->
-                            </div>
-                            <div id="ticker-content-clone" class="flex items-center space-x-8 px-4 whitespace-nowrap text-sm font-medium" aria-hidden="true">
-                                <!-- Clone para animação contínua -->
-                            </div>
+                     <!-- Ticker de Ativos em Tempo Real -->
+                    <div class="absolute top-0 left-0 right-0 h-8 flex items-center overflow-hidden bg-gray-900 dark:bg-gray-950 text-white">
+                        <div id="market-ticker" class="ticker-wrapper">
+                            <!-- Conteúdo será preenchido dinamicamente pela API Finnhub -->
                         </div>
                     </div>
                     
@@ -344,10 +339,10 @@
     </div>
 
     <!-- Scripts -->
-    <script src="./assets/data/mock-data.js"></script>
-    <script src="./js/auth.js"></script>
-    <script src="./js/api.js"></script>
-    <script src="./js/asset-classifier.js"></script>
-    <script src="./js/app.js"></script>
-</body>
-</html>
+    <script src="js/auth.js"></script>
+    <script src="js/finnhub-api.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/market-data.js"></script>
+    <script src="js/asset-classifier.js"></script>
+    <script src="js/app.js"></script>
+    <script src="assets/data/mock-data.js"></script>

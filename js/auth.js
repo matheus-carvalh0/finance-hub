@@ -213,10 +213,9 @@ class AuthManager {
             userNameEl.textContent = this.currentUser.name;
         }
 
-        // Inicializar a aplicação principal se ainda não foi inicializada
-        if (window.FinanceApp && !window.FinanceApp.initialized) {
-            window.FinanceApp.initialize();
-        }
+        // Disparar um evento personalizado para que o FinanceApp possa inicializar
+        // Isso garante que o DOM esteja pronto e o AuthManager esteja disponível
+        document.dispatchEvent(new CustomEvent("auth:loggedIn"));
     }
 
     showAlert(message, type = 'info') {
