@@ -2,7 +2,7 @@
 class FinnhubAPI {
     constructor() {
         // Chave da API Finnhub (gratuita) - substitua pela sua chave
-        this.apiKey = 'sandbox_c9qj9h9r01qnhpgfj7k0sandbox_c9qj9h9r01qnhpgfj7kg'; // Chave sandbox para desenvolvimento
+        this.apiKey = 'd3eh21pr01qrd38udd70d3eh21pr01qrd38udd7g'; // Chave sandbox para desenvolvimento
         this.baseUrl = 'https://finnhub.io/api/v1';
         this.wsUrl = 'wss://ws.finnhub.io';
         this.websocket = null;
